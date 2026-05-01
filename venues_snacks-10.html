@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Venues Snacks</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #F5C518; --gold-dim: #9c7d0f;
+    --bg: #0e0e0e; --bg2: #181818; --bg3: #222;
+    --border: #2a2a2a; --text: #f0f0f0; --muted: #777;
+    --green: #4ade80; --green-bg: #0d2b1a;
+    --blue: #60a5fa;  --blue-bg: #0d1a2b;
+    --purple: #c084fc; --purple-bg: #1a0d2b;
+    --red: #f87171;   --red-bg: #2b0d0d;
+    --orange: #fb923c; --orange-bg: #2b1a0d;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
+
+  /* NAV */
+  .nav-tabs { display: flex; background: var(--bg2); border-bottom: 2px solid var(--gold); position: sticky; top: 0; z-index: 60; }
+  .nav-tab {
+    flex: 1; padding: 11px 2px; text-align: center;
+    font-family: 'Bebas Neue', sans-serif; font-size: 0.85rem; letter-spacing: 1px;
+    color: var(--muted); cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s;
+  }
+  .nav-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+  /* PAGES */
+  .page { display: none; padding-bottom: 360px; }
+  .page.active { display: block; }
+  .page-np { display: none; padding-bottom: 20px; } /* no bottom bar */
+  .page-np.active { display: block; }
+
+  /* PAGE HEADER */
+  .page-header { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 12px 16px; display: flex; align-items: center; gap: 10px; }
+  .page-header .logo { font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; color: var(--gold); letter-spacing: 2px; }
+  .page-header .sub  { font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+
+  /* SECTION LABEL */
+  .sec-label { font-family: 'Bebas Neue', sans-serif; font-size: 1rem; color: var(--gold); letter-spacing: 2px; padding: 14px 16px 6px; border-left: 3px solid var(--gold); margin: 10px 12px 4px; }
+
+  /* PRODUCT ROW */
+  .product { display: flex; align-items: center; background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; margin: 5px 12px; padding: 12px 14px; gap: 12px; transition: border-color 0.15s, background 0.15s; }
+  .product.selected { border-color: var(--gold); background: #1e1a06; }
+  .prod-info { flex: 1; min-width: 0; }
+  .prod-name { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .prod-sub  { font-size: 11px; color: var(--muted); margin-top: 1px; }
+  .prod-price { font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem; color: var(--gold); white-space: nowrap; }
+
+  /* QTY CONTROL */
+  .qty-ctrl { display: flex; align-items: center; }
+  .qty-btn { width: 32px; height: 32px; background: var(--bg3); border: 1px solid var(--border); color: var(--text); font-size: 18px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; user-select: none; }
+  .qty-btn:first-child { border-radius: 8px 0 0 8px; }
+  .qty-btn:last-child  { border-radius: 0 8px 8px 0; }
+  .qty-btn.minus { color: var(--muted); } .qty-btn.plus { color: var(--gold); }
+  .qty-btn:active { background: #333; }
+  .qty-num { width: 36px; height: 32px; background: var(--bg3); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; }
+  .qty-num.active { color: var(--gold); }
+
+  /* BOTTOM BAR */
+  .bottom-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg2); border-top: 2px solid var(--gold); padding: 10px 14px 14px; z-index: 100; }
+  .resumen { display: flex; flex-direction: column; gap: 5px; margin-bottom: 8px; max-height: 60px; overflow-y: auto; }
+  .resumen-item { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
+  .resumen-item span:last-child { color: var(--text); font-weight: 700; }
+  .total-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0 9px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); margin-bottom: 9px; }
+  .total-label { font-family: 'Bebas Neue', sans-serif; font-size: 1rem; color: var(--muted); letter-spacing: 1px; }
+  .total-val   { font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; color: var(--gold); }
+
+  .bills-row { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 8px; }
+  .bill { background: var(--bg3); border: 1px solid var(--border); border-radius: 7px; color: var(--text); font-size: 11px; font-weight: 700; padding: 5px 8px; cursor: pointer; }
+  .bill:active { background: var(--gold); color: #111; border-color: var(--gold); }
+
+  .pago-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .pago-input { flex: 1; background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 1.1rem; font-weight: 700; padding: 10px 12px; outline: none; min-width: 0; }
+  .pago-input:focus { border-color: var(--gold); }
+  .pago-input::placeholder { color: #444; font-size: 0.85rem; font-weight: 400; }
+
+  .vueltas-result { display: none; border-radius: 10px; padding: 9px 14px; text-align: center; font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; letter-spacing: 1px; margin-bottom: 8px; }
+  .vueltas-result.ok     { display: block; background: var(--green-bg);  color: var(--green); }
+  .vueltas-result.falta  { display: block; background: var(--red-bg);    color: var(--red); }
+  .vueltas-result.exacto { display: block; background: #1a1a0d;          color: var(--gold); }
+
+  .pago-method-row { display: flex; gap: 8px; }
+  .method-btn { flex: 1; padding: 10px 8px; border-radius: 10px; border: 2px solid var(--border); background: var(--bg3); color: var(--muted); font-family: 'Bebas Neue', sans-serif; font-size: 1rem; letter-spacing: 1px; cursor: pointer; transition: all 0.15s; }
+  .method-btn.selected-cash { border-color: var(--green);  color: var(--green);  background: var(--green-bg); }
+  .method-btn.selected-card { border-color: var(--blue);   color: var(--blue);   background: var(--blue-bg); }
+  .register-btn { flex: 1.2; padding: 10px 8px; border-radius: 10px; border: none; background: var(--gold); color: #111; font-family: 'Bebas Neue', sans-serif; font-size: 1rem; letter-spacing: 1px; cursor: pointer; }
+  .register-btn:active { background: var(--gold-dim); transform: scale(0.97); }
+  .register-btn:disabled { background: #444; color: #888; cursor: not-allowed; }
+
+  .reset-row { display: flex; gap: 8px; margin-bottom: 8px; }
+  .reset-btn { flex: 1; background: transparent; border: 1px solid var(--border); border-radius: 8px; color: var(--muted); font-size: 12px; padding: 7px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+  .reset-btn:active { border-color: var(--red); color: var(--red); }
+  .empty-msg { text-align: center; color: var(--muted); font-size: 13px; padding: 8px; }
+
+  /* SERVICE FEE */
+  .servicio-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; }
+  .servicio-btn {
+    font-family: 'Bebas Neue', sans-serif; font-size: 0.85rem; letter-spacing: 1px;
+    padding: 5px 12px; border-radius: 20px; border: 1.5px solid var(--border);
+    background: var(--bg3); color: var(--muted); cursor: pointer; transition: all 0.15s;
+  }
+  .servicio-btn.on { border-color: var(--gold); color: var(--gold); background: #1e1a06; }
+  .servicio-val { font-family: 'Bebas Neue', sans-serif; font-size: 0.95rem; color: var(--muted); }
+  .servicio-val.on { color: var(--gold); }
+
+  /* TOAST */
+  .toast { position: fixed; top: 55px; left: 50%; transform: translateX(-50%) translateY(-20px); background: var(--green); color: #111; font-family: 'Bebas Neue', sans-serif; font-size: 1rem; letter-spacing: 1px; padding: 10px 20px; border-radius: 30px; opacity: 0; transition: all 0.3s; z-index: 200; pointer-events: none; white-space: nowrap; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ── INVENTARIO / COMPRAS shared ── */
+  .inv-header { padding: 14px 14px 10px; border-bottom: 1px solid var(--border); }
+  .inv-header h2 { font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem; color: var(--gold); letter-spacing: 2px; margin-bottom: 10px; }
+
+  .summary-cards { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+  .sum-card { flex: 1; min-width: 80px; border-radius: 10px; padding: 9px 10px; border: 1px solid var(--border); }
+  .sum-card.total-card  { background: #1a1600;        border-color: var(--gold-dim); }
+  .sum-card.cash-card   { background: var(--green-bg); border-color: #1a4a2a; }
+  .sum-card.card-card   { background: var(--blue-bg);  border-color: #1a2a4a; }
+  .sum-card.cost-card   { background: var(--red-bg);   border-color: #4a1a1a; }
+  .sum-card.profit-card { background: var(--purple-bg);border-color: #2a1a4a; }
+  .sum-label { font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 2px; }
+  .sum-val   { font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; }
+  .sum-card.total-card  .sum-val { color: var(--gold); }
+  .sum-card.cash-card   .sum-val { color: var(--green); }
+  .sum-card.card-card   .sum-val { color: var(--blue); }
+  .sum-card.cost-card   .sum-val { color: var(--red); }
+  .sum-card.profit-card .sum-val { color: var(--purple); }
+  .sum-count { font-size: 10px; color: var(--muted); margin-top: 1px; }
+
+  .inv-actions { display: flex; gap: 8px; }
+  .inv-clear-btn { flex: 1; background: transparent; border: 1px solid var(--border); border-radius: 8px; color: var(--muted); font-size: 12px; padding: 8px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+  .inv-clear-btn:active { border-color: var(--red); color: var(--red); }
+
+  /* Sale / purchase entries */
+  .entry { margin: 8px 12px; background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .entry-top { display: flex; justify-content: space-between; align-items: center; padding: 9px 14px 5px; flex-wrap: wrap; gap: 4px; }
+  .entry-num  { font-size: 11px; color: var(--muted); }
+  .entry-time { font-size: 11px; color: var(--muted); }
+  .entry-badge { font-family: 'Bebas Neue', sans-serif; font-size: 0.8rem; letter-spacing: 1px; padding: 3px 10px; border-radius: 20px; }
+  .entry-badge.cash   { background: var(--green-bg);  color: var(--green);  border: 1px solid #1a4a2a; }
+  .entry-badge.card   { background: var(--blue-bg);   color: var(--blue);   border: 1px solid #1a2a4a; }
+  .entry-badge.compra { background: var(--orange-bg); color: var(--orange); border: 1px solid #4a2a1a; }
+  .entry-items { padding: 0 14px 5px; }
+  .entry-item-line { font-size: 12px; color: var(--muted); line-height: 1.6; }
+  .entry-total-line { display: flex; justify-content: space-between; padding: 6px 14px 10px; border-top: 1px solid var(--border); margin-top: 3px; }
+  .entry-total-line span:first-child { font-size: 12px; color: var(--muted); }
+  .entry-total-line span:last-child  { font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; color: var(--gold); }
+
+  .no-entries { text-align: center; color: var(--muted); font-size: 14px; padding: 40px 20px; }
+
+  /* ── COMPRAS FORM ── */
+  .compras-form { padding: 14px 14px 10px; border-bottom: 1px solid var(--border); }
+  .compras-form h2 { font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem; color: var(--orange); letter-spacing: 2px; margin-bottom: 12px; }
+  .field-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; display: block; }
+  .field-input {
+    width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: 10px;
+    color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 1rem; font-weight: 600;
+    padding: 10px 12px; outline: none; margin-bottom: 10px;
+  }
+  .field-input:focus { border-color: var(--orange); }
+  .field-input::placeholder { color: #444; font-weight: 400; font-size: 0.9rem; }
+  .field-row { display: flex; gap: 10px; }
+  .field-row > div { flex: 1; }
+  .add-compra-btn { width: 100%; padding: 12px; border-radius: 10px; border: none; background: var(--orange); color: #111; font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; letter-spacing: 1px; cursor: pointer; margin-top: 2px; }
+  .add-compra-btn:active { opacity: 0.8; transform: scale(0.98); }
+  .add-compra-btn:disabled { background: #444; color: #888; cursor: not-allowed; }
+
+  /* compras summary */
+  .compras-summary { display: flex; gap: 6px; margin-bottom: 10px; }
+  .cs-card { flex: 1; border-radius: 10px; padding: 9px 10px; border: 1px solid var(--border); }
+  .cs-card.spent { background: var(--red-bg);    border-color: #4a1a1a; }
+  .cs-card.items { background: var(--orange-bg); border-color: #4a2a1a; }
+  .cs-card .sum-val.red    { color: var(--red); }
+  .cs-card .sum-val.orange { color: var(--orange); }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<div class="nav-tabs">
+  <div class="nav-tab active"  onclick="goPage('venta',this)">🛒 Venta</div>
+  <div class="nav-tab"         onclick="goPage('inventario',this)">📊 Ventas</div>
+</div>
+
+<!-- ══════════ VENTA ══════════ -->
+<div class="page active" id="page-venta">
+  <div class="page-header">
+    <span style="font-size:20px">🎤</span>
+    <div><div class="logo">Venues Snacks</div><div class="sub">Selecciona productos</div></div>
+  </div>
+
+  <div class="sec-label">🥃 Licores</div>
+
+  <div class="product" id="p-300000-1">
+    <div class="prod-info"><div class="prod-name">Aguardiente Antioqueño Azul</div><div class="prod-sub">TP 1050ml</div></div>
+    <div class="prod-price">$300.000</div>
+    <div class="qty-ctrl">
+      <button class="qty-btn minus" onclick="change('300000-1',-1)">−</button>
+      <div class="qty-num" id="qty-300000-1">0</div>
+      <button class="qty-btn plus" onclick="change('300000-1',1)">+</button>
+    </div>
+  </div>
+  <div class="product" id="p-190000-1">
+    <div class="prod-info"><div class="prod-name">Aguardiente Antioqueño Azul</div><div class="prod-sub">BT 375ml</div></div>
+    <div class="prod-price">$190.000</div>
+    <div class="qty-ctrl">
+      <button class="qty-btn minus" onclick="change('190000-1',-1)">−</button>
+      <div class="qty-num" id="qty-190000-1">0</div>
+      <button class="qty-btn plus" onclick="change('190000-1',1)">+</button>
+    </div>
+  </div>
+  <div class="product" id="p-18000-1">
+    <div class="prod-info"><div class="prod-name">Club Colombia Dorada</div><div class="prod-sub">LT 330ml</div></div>
+    <div class="prod-price">$18.000</div>
+    <div class="qty-ctrl">
+      <button class="qty-btn minus" onclick="change('18000-1',-1)">−</button>
+      <div class="qty-num" id="qty-18000-1">0</div>
+      <button class="qty-btn plus" onclick="change('18000-1',1)">+</button>
+    </div>
+  </div>
+
+  <div class="sec-label">🥤 Bebidas Sin Alcohol</div>
+
+  <div class="product" id="p-20000-1">
+    <div class="prod-info"><div class="prod-name">Red Bull</div><div class="prod-sub">LT 250ml</div></div>
+    <div class="prod-price">$20.000</div>
+    <div class="qty-ctrl">
+      <button class="qty-btn minus" onclick="change('20000-1',-1)">−</button>
+      <div class="qty-num" id="qty-20000-1">0</div>
+      <button class="qty-btn plus" onclick="change('20000-1',1)">+</button>
+    </div>
+  </div>
+  <div class="product" id="p-13000-1">
+    <div class="prod-info"><div class="prod-name">Agua Manantial Con Gas</div><div class="prod-sub">BT 600ml</div></div>
+    <div class="prod-price">$13.000</div>
+    <div class="qty-ctrl">
+      <button class="qty-btn minus" onclick="change('13000-1',-1)">−</button>
+      <div class="qty-num" id="qty-13000-1">0</div>
+      <button class="qty-btn plus" onclick="change('13000-1',1)">+</button>
+    </div>
+  </div>
+  <div class="product" id="p-13000-2">
+    <div class="prod-info"><div class="prod-name">Agua Manantial Sin Gas</div><div class="prod-sub">BT 600ml</div></div>
+    <div class="prod-price">$13.000</div>
+    <div class="qty-ctrl">
+      <button class="qty-btn minus" onclick="change('13000-2',-1)">−</button>
+      <div class="qty-num" id="qty-13000-2">0</div>
+      <button class="qty-btn plus" onclick="change('13000-2',1)">+</button>
+    </div>
+  </div>
+  <div class="product" id="p-13000-3">
+    <div class="prod-info"><div class="prod-name">Coca Cola</div><div class="prod-sub">LT 330ml</div></div>
+    <div class="prod-price">$13.000</div>
+    <div class="qty-ctrl">
+      <button class="qty-btn minus" onclick="change('13000-3',-1)">−</button>
+      <div class="qty-num" id="qty-13000-3">0</div>
+      <button class="qty-btn plus" onclick="change('13000-3',1)">+</button>
+    </div>
+  </div>
+
+  <div class="sec-label">🍔 Imperdibles</div>
+
+  <div class="product" id="p-28000-1">
+    <div class="prod-info"><div class="prod-name">Hamburguesa con Tocineta</div></div>
+    <div class="prod-price">$28.000</div>
+    <div class="qty-ctrl">
+      <button class="qty-btn minus" onclick="change('28000-1',-1)">−</button>
+      <div class="qty-num" id="qty-28000-1">0</div>
+      <button class="qty-btn plus" onclick="change('28000-1',1)">+</button>
+    </div>
+  </div>
+  <div class="product" id="p-25000-1">
+    <div class="prod-info"><div class="prod-name">Crispetas de Sal</div></div>
+    <div class="prod-price">$25.000</div>
+    <div class="qty-ctrl">
+      <button class="qty-btn minus" onclick="change('25000-1',-1)">−</button>
+      <div class="qty-num" id="qty-25000-1">0</div>
+      <button class="qty-btn plus" onclick="change('25000-1',1)">+</button>
+    </div>
+  </div>
+  <div class="product" id="p-24000-1">
+    <div class="prod-info"><div class="prod-name">Perro Caliente Americano</div></div>
+    <div class="prod-price">$24.000</div>
+    <div class="qty-ctrl">
+      <button class="qty-btn minus" onclick="change('24000-1',-1)">−</button>
+      <div class="qty-num" id="qty-24000-1">0</div>
+      <button class="qty-btn plus" onclick="change('24000-1',1)">+</button>
+    </div>
+  </div>
+  <div class="product" id="p-8000-1">
+    <div class="prod-info"><div class="prod-name">Trululu Maxipack</div><div class="prod-sub">100gr</div></div>
+    <div class="prod-price">$8.000</div>
+    <div class="qty-ctrl">
+      <button class="qty-btn minus" onclick="change('8000-1',-1)">−</button>
+      <div class="qty-num" id="qty-8000-1">0</div>
+      <button class="qty-btn plus" onclick="change('8000-1',1)">+</button>
+    </div>
+  </div>
+
+  <!-- BOTTOM BAR -->
+  <div class="bottom-bar">
+    <div class="reset-row">
+      <button class="reset-btn" onclick="resetTodo()">🗑 Limpiar todo</button>
+      <button class="reset-btn" onclick="resetPago()">↩ Limpiar pago</button>
+    </div>
+    <div class="resumen" id="resumen"><div class="empty-msg">Agrega productos arriba ↑</div></div>
+    <div class="servicio-row">
+      <button class="servicio-btn" id="servicioBtn" onclick="toggleServicio()">+ Servicio 10%</button>
+      <span class="servicio-val" id="servicioVal"></span>
+    </div>
+    <div class="total-row">
+      <span class="total-label">TOTAL</span>
+      <span class="total-val" id="totalVal">$0</span>
+    </div>
+    <div class="bills-row">
+      <button class="bill" onclick="setPago(5000)">$5k</button>
+      <button class="bill" onclick="setPago(10000)">$10k</button>
+      <button class="bill" onclick="setPago(20000)">$20k</button>
+      <button class="bill" onclick="setPago(50000)">$50k</button>
+      <button class="bill" onclick="setPago(100000)">$100k</button>
+      <button class="bill" onclick="setPago(200000)">$200k</button>
+      <button class="bill" onclick="setPago(500000)">$500k</button>
+    </div>
+    <div class="pago-row">
+      <input class="pago-input" id="pagoInput" type="number" inputmode="numeric" placeholder="Con cuánto paga..." oninput="calcVueltas()" />
+    </div>
+    <div class="vueltas-result" id="vueltasResult"></div>
+    <div class="pago-method-row">
+      <button class="method-btn" id="btn-cash" onclick="selectMethod('cash')">💵 Efectivo</button>
+      <button class="method-btn" id="btn-card" onclick="selectMethod('card')">💳 Datáfono</button>
+      <button class="register-btn" id="registerBtn" onclick="registrarVenta()" disabled>✔ Registrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ VENTAS (inventario) ══════════ -->
+<div class="page-np" id="page-inventario">
+  <div class="inv-header">
+    <h2>📊 Resumen de Ventas</h2>
+    <div class="summary-cards">
+      <div class="sum-card total-card">
+        <div class="sum-label">Total vendido</div>
+        <div class="sum-val" id="inv-total">$0</div>
+        <div class="sum-count" id="inv-count">0 ventas</div>
+      </div>
+      <div class="sum-card cash-card">
+        <div class="sum-label">💵 Efectivo</div>
+        <div class="sum-val" id="inv-cash">$0</div>
+        <div class="sum-count" id="inv-cash-count">0</div>
+      </div>
+      <div class="sum-card card-card">
+        <div class="sum-label">💳 Datáfono</div>
+        <div class="sum-val" id="inv-card">$0</div>
+        <div class="sum-count" id="inv-card-count">0</div>
+      </div>
+    </div>
+    <div class="inv-actions">
+      <button class="inv-clear-btn" onclick="clearVentas()">🗑 Borrar ventas</button>
+    </div>
+  </div>
+  <div id="salesList"></div>
+</div>
+
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+  // ── Data ──
+  const products = {
+    '300000-1': { price: 300000, name: 'Aguardiente TP 1050ml' },
+    '190000-1': { price: 190000, name: 'Aguardiente BT 375ml' },
+    '18000-1':  { price: 18000,  name: 'Club Colombia' },
+    '20000-1':  { price: 20000,  name: 'Red Bull' },
+    '13000-1':  { price: 13000,  name: 'Agua Con Gas' },
+    '13000-2':  { price: 13000,  name: 'Agua Sin Gas' },
+    '13000-3':  { price: 13000,  name: 'Coca Cola' },
+    '28000-1':  { price: 28000,  name: 'Hamburguesa c/Tocineta' },
+    '25000-1':  { price: 25000,  name: 'Crispetas de Sal' },
+    '24000-1':  { price: 24000,  name: 'Perro Caliente' },
+    '8000-1':   { price: 8000,   name: 'Trululu Maxipack' },
+  };
+  const qtys = {};
+  Object.keys(products).forEach(k => qtys[k] = 0);
+  let payMethod = null;
+  let servicioOn = false;
+  let sales   = JSON.parse(localStorage.getItem('vs_sales')   || '[]');
+  let compras = JSON.parse(localStorage.getItem('vs_compras') || '[]');
+
+  // ── Utils ──
+  function fmt(n) { return '$' + Math.round(n).toLocaleString('es-CO'); }
+  function stamp() {
+    const d = new Date();
+    return {
+      time: d.toLocaleTimeString('es-CO',  { hour:'2-digit', minute:'2-digit' }),
+      date: d.toLocaleDateString('es-CO',  { day:'2-digit', month:'2-digit' })
+    };
+  }
+  function showToast(msg, color) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.style.background = color || 'var(--green)';
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  // ── Nav ──
+  function goPage(name, tab) {
+    document.querySelectorAll('.page, .page-np').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('page-' + name).classList.add('active');
+    tab.classList.add('active');
+    if (name === 'inventario') renderVentas();
+    if (name === 'compras')    renderCompras();
+  }
+
+  // ── Venta: cart ──
+  function change(id, delta) {
+    qtys[id] = Math.max(0, (qtys[id]||0) + delta);
+    const el = document.getElementById('qty-' + id);
+    el.textContent = qtys[id];
+    el.className = 'qty-num' + (qtys[id] > 0 ? ' active' : '');
+    document.getElementById('p-' + id).classList.toggle('selected', qtys[id] > 0);
+    updateTotal();
+  }
+  function getBaseTotal() { return Object.keys(products).reduce((s,k) => s + products[k].price * qtys[k], 0); }
+  function getTotal() {
+    const base = getBaseTotal();
+    if (!servicioOn) return base;
+
+    // Calcular fee producto por producto con excepciones específicas
+    const exceptions = {
+      '300000-1': 30000, // Aguardiente TP 1050ml: $300k -> $330k
+      '190000-1': 20000, // Aguardiente BT 375ml: $190k -> $210k
+      '18000-1':   2000, // Cerveza: $18k -> $20k
+      '20000-1':   2000, // Red Bull: $20k -> $22k
+      '13000-1':   1000, // Agua Con Gas: $13k -> $14k
+      '13000-2':   1000, // Agua Sin Gas: $13k -> $14k
+      '13000-3':   1000, // Coca Cola: $13k -> $14k
+      '28000-1':   3000, // Hamburguesa: $28k -> $31k
+      '25000-1':   2000, // Crispetas: $25k -> $27k
+      '24000-1':   2000, // Perro Caliente: $24k -> $26k
+      '8000-1':    1000, // Trululu: $8k -> $9k
+    };
+
+    let fee = 0;
+    Object.keys(products).forEach(k => {
+      if (qtys[k] === 0) return;
+      const sub = products[k].price * qtys[k];
+      if (exceptions[k] !== undefined) {
+        fee += exceptions[k] * qtys[k];
+      } else {
+        fee += Math.round((sub * 0.1) / 1000) * 1000;
+      }
+    });
+
+    return base + fee;
+  }
+  function toggleServicio() {
+    servicioOn = !servicioOn;
+    const btn = document.getElementById('servicioBtn');
+    const val = document.getElementById('servicioVal');
+    if (servicioOn) {
+      btn.classList.add('on');
+      btn.textContent = '✓ Servicio 10%';
+      const fee = Math.round(getBaseTotal() * 0.1);
+      val.textContent = '+' + fmt(fee);
+      val.classList.add('on');
+    } else {
+      btn.classList.remove('on');
+      btn.textContent = '+ Servicio 10%';
+      val.textContent = '';
+      val.classList.remove('on');
+    }
+    updateTotal();
+  }
+  function updateTotal() {
+    const total = getTotal();
+    document.getElementById('totalVal').textContent = fmt(total);
+    // refresh servicio display
+    if (servicioOn) {
+      const fee = Math.round(getBaseTotal() * 0.1);
+      document.getElementById('servicioVal').textContent = '+' + fmt(fee);
+    }
+    const items = Object.keys(products).filter(k => qtys[k] > 0);
+    const res = document.getElementById('resumen');
+    res.innerHTML = items.length === 0
+      ? '<div class="empty-msg">Agrega productos arriba ↑</div>'
+      : items.map(k => `<div class="resumen-item"><span>${qtys[k]}x ${products[k].name}</span><span>${fmt(products[k].price*qtys[k])}</span></div>`).join('');
+    calcVueltas();
+    updateRegisterBtn();
+  }
+
+  // ── Venta: payment ──
+  function selectMethod(m) {
+    payMethod = m;
+    document.getElementById('btn-cash').className = 'method-btn' + (m==='cash' ? ' selected-cash' : '');
+    document.getElementById('btn-card').className = 'method-btn' + (m==='card' ? ' selected-card' : '');
+    updateRegisterBtn();
+  }
+  function updateRegisterBtn() {
+    document.getElementById('registerBtn').disabled = !(getTotal()>0 && payMethod);
+  }
+  function setPago(a) { document.getElementById('pagoInput').value = a; calcVueltas(); }
+  function calcVueltas() {
+    const total = getTotal(), pago = parseFloat(document.getElementById('pagoInput').value)||0;
+    const res = document.getElementById('vueltasResult');
+    if (!pago || !total) { res.className = 'vueltas-result'; return; }
+    const v = pago - total;
+    if (v>0)      { res.className='vueltas-result ok';     res.textContent='✅ Vueltas: '+fmt(v); }
+    else if(v<0)  { res.className='vueltas-result falta';  res.textContent='❌ Falta: '+fmt(-v); }
+    else          { res.className='vueltas-result exacto'; res.textContent='🎯 Pago exacto'; }
+  }
+
+  // ── Venta: register ──
+  function registrarVenta() {
+    const total = getTotal(); if(!total||!payMethod) return;
+    const items = Object.keys(products).filter(k=>qtys[k]>0)
+      .map(k=>({ name:products[k].name, qty:qtys[k], sub:products[k].price*qtys[k] }));
+    const {time,date} = stamp();
+    sales.unshift({ id:Date.now(), total, method:payMethod, items, time, date, servicio: servicioOn });
+    localStorage.setItem('vs_sales', JSON.stringify(sales));
+    showToast('✔ Venta · ' + (payMethod==='cash'?'💵 Efectivo':'💳 Datáfono'));
+    resetTodo();
+  }
+
+  // ── Reset ──
+  function resetTodo() {
+    Object.keys(qtys).forEach(k=>{
+      qtys[k]=0;
+      const el=document.getElementById('qty-'+k); if(el){el.textContent='0';el.className='qty-num';}
+      const p=document.getElementById('p-'+k);    if(p) p.classList.remove('selected');
+    });
+    payMethod=null;
+    servicioOn=false;
+    document.getElementById('servicioBtn').className='servicio-btn';
+    document.getElementById('servicioBtn').textContent='+ Servicio 10%';
+    document.getElementById('servicioVal').textContent='';
+    document.getElementById('servicioVal').className='servicio-val';
+    document.getElementById('btn-cash').className='method-btn';
+    document.getElementById('btn-card').className='method-btn';
+    document.getElementById('pagoInput').value='';
+    document.getElementById('vueltasResult').className='vueltas-result';
+    updateTotal();
+  }
+  function resetPago() {
+    document.getElementById('pagoInput').value='';
+    document.getElementById('vueltasResult').className='vueltas-result';
+  }
+
+  // ── Ventas: render ──
+  function renderVentas() {
+    const cashS = sales.filter(v=>v.method==='cash');
+    const cardS = sales.filter(v=>v.method==='card');
+    document.getElementById('inv-total').textContent      = fmt(sales.reduce((s,v)=>s+v.total,0));
+    document.getElementById('inv-count').textContent      = sales.length+' venta'+(sales.length!==1?'s':'');
+    document.getElementById('inv-cash').textContent       = fmt(cashS.reduce((s,v)=>s+v.total,0));
+    document.getElementById('inv-cash-count').textContent = cashS.length+' venta'+(cashS.length!==1?'s':'');
+    document.getElementById('inv-card').textContent       = fmt(cardS.reduce((s,v)=>s+v.total,0));
+    document.getElementById('inv-card-count').textContent = cardS.length+' venta'+(cardS.length!==1?'s':'');
+    const list = document.getElementById('salesList');
+    if(!sales.length){ list.innerHTML='<div class="no-entries">Sin ventas registradas 🎤</div>'; return; }
+    list.innerHTML = sales.map((s,i)=>`
+      <div class="entry">
+        <div class="entry-top">
+          <span class="entry-num">Venta #${sales.length-i}</span>
+          <span class="entry-badge ${s.method}">${s.method==='cash'?'💵 Efectivo':'💳 Datáfono'}</span>
+          <span class="entry-time">${s.date} ${s.time}</span>
+        </div>
+        <div class="entry-items">${s.items.map(it=>`<div class="entry-item-line">${it.qty}x ${it.name} — ${fmt(it.sub)}</div>`).join('')}
+          ${s.servicio ? `<div class="entry-item-line" style="color:var(--gold)">+ Servicio 10%</div>` : ''}
+        </div>
+        <div class="entry-total-line"><span>Total</span><span>${fmt(s.total)}</span></div>
+        <div style="padding:0 14px 10px">
+          <button onclick="borrarVenta(${s.id})" style="width:100%;background:transparent;border:1px solid #3a1a1a;border-radius:8px;color:#f87171;font-size:12px;padding:7px;cursor:pointer;font-family:'DM Sans',sans-serif;">🗑 Borrar esta venta</button>
+        </div>
+      </div>`).join('');
+  }
+  function borrarVenta(id) {
+    if(!confirm('¿Borrar esta venta?')) return;
+    sales = sales.filter(s => s.id !== id);
+    localStorage.setItem('vs_sales', JSON.stringify(sales));
+    renderVentas();
+    showToast('Venta borrada', '#f87171');
+  }
+
+  function clearVentas() {
+    if(!confirm('¿Borrar todas las ventas?')) return;
+    sales=[]; localStorage.setItem('vs_sales',JSON.stringify(sales));
+    renderVentas(); showToast('Ventas borradas','#f87171');
+  }
+
+  // ── Compras: form helpers ──
+  // Init
+  updateTotal();
+</script>
+</body>
+</html>
